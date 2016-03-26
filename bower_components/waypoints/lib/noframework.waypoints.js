@@ -1,5 +1,5 @@
 /*!
-Waypoints - 4.0.0
+Waypoints - 3.1.1
 Copyright © 2011-2015 Caleb Troughton
 Licensed under the MIT license.
 https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
@@ -348,7 +348,7 @@ https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
     /*eslint-disable eqeqeq */
     var isWindow = this.element == this.element.window
     /*eslint-enable eqeqeq */
-    var contextOffset = isWindow ? undefined : this.adapter.offset()
+    var contextOffset = this.adapter.offset()
     var triggeredGroups = {}
     var axes
 
@@ -421,11 +421,9 @@ https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
       }
     }
 
-    Waypoint.requestAnimationFrame(function() {
-      for (var groupKey in triggeredGroups) {
-        triggeredGroups[groupKey].flushTriggers()
-      }
-    })
+    for (var groupKey in triggeredGroups) {
+      triggeredGroups[groupKey].flushTriggers()
+    }
 
     return this
   }

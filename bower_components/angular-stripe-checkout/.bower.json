@@ -1,7 +1,7 @@
 {
   "name": "angular-stripe-checkout",
   "main": "angular-stripe-checkout.js",
-  "version": "4.0.1",
+  "version": "2.2.1",
   "authors": [
     "Tobyn Baugher <tobynb@gmail.com>"
   ],
@@ -11,14 +11,14 @@
   ],
   "license": "MIT",
   "homepage": "https://github.com/tobyn/angular-stripe-checkout",
-  "_release": "4.0.1",
+  "_release": "2.2.1",
   "_resolution": {
     "type": "version",
-    "tag": "4.0.1",
-    "commit": "40455ddf28c59a540ce4b247b350801c7ca320ed"
+    "tag": "2.2.1",
+    "commit": "0dd46de5ca555f66b9631e34bc6984a0f5a61184"
   },
   "_source": "git://github.com/tobyn/angular-stripe-checkout.git",
-  "_target": "~4.0.1",
+  "_target": "~2.2.1",
   "_originalSource": "angular-stripe-checkout",
   "_direct": true
 }

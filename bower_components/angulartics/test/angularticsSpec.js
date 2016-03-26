@@ -1,10 +1,9 @@
 describe('window.angulartics', function() {
   beforeEach(function() {
-    jasmine.clock().install();
+    jasmine.Clock.useMock();
   });
   afterEach(function() {
     delete window.angularticsTestVendor;
-    jasmine.clock().uninstall();
   });
 
   it('should manage vendor wait count', function() {
@@ -14,15 +13,15 @@ describe('window.angulartics', function() {
     angulartics.waitForVendorApi('angularticsTestVendor', 1, spyWhenLoaded);
     expect(window.angulartics.waitForVendorCount).toEqual(2);
 
-    jasmine.clock().tick(1);
+    jasmine.Clock.tick(1);
     expect(window.angulartics.waitForVendorCount).toEqual(2);
 
     window.angularticsTestVendor = {};
-    jasmine.clock().tick(1);
+    jasmine.Clock.tick(1);
     expect(angulartics.waitForVendorCount).toEqual(1);
 
     window.angularticsTestVendor.loaded = true;
-    jasmine.clock().tick(1);
+    jasmine.Clock.tick(1);
     expect(window.angulartics.waitForVendorCount).toEqual(0);
     expect(spyWhenLoaded).toHaveBeenCalledWith(window.angularticsTestVendor);
   });
@@ -57,15 +56,6 @@ describe('Module: angulartics', function() {
         expect(_$analytics_.settings.pageTracking.basePath).toBe(baseUrl);
       });
 
-    });
-
-    it ('should configure excluded routes', function() {
-      module(function(_$analyticsProvider_) {
-        _$analyticsProvider_.excludeRoutes(['/abc/def']);
-      });
-      inject(function(_$analytics_) {
-        expect(_$analytics_.settings.pageTracking.excludedRoutes).toEqual(['/abc/def']);
-      });
     });
 
   });
@@ -120,70 +110,6 @@ describe('Module: angulartics', function() {
       });
     });
 
-    describe('excludedRoutes', function() {
-      var analytics,
-          rootScope,
-          location;
-      beforeEach(module('ui.router'));
-      beforeEach(inject(function(_$analytics_, _$rootScope_, _$location_) {
-        analytics = _$analytics_;
-        location = _$location_;
-        rootScope = _$rootScope_;
-
-        spyOn(analytics, 'pageTrack');
-      }));
-
-      it('should have empty excludedRoutes by default', function () {
-        expect(analytics.settings.pageTracking.excludedRoutes.length).toBe(0);
-      });
-
-      it('should trigger page track if excludeRoutes is empty', function() {
-        analytics.settings.pageTracking.excludedRoutes = [];
-        location.path('/abc');
-        rootScope.$emit('$stateChangeSuccess');
-        expect(analytics.pageTrack).toHaveBeenCalledWith('/abc', location);
-      });
-
-      it('should trigger page track if excludeRoutes do not match current route', function() {
-        analytics.settings.pageTracking.excludedRoutes = ['/def'];
-        location.path('/abc');
-        rootScope.$emit('$stateChangeSuccess');
-        expect(analytics.pageTrack).toHaveBeenCalledWith('/abc', location);
-      });
-
-      it ('should not trigger page track if current route is excluded', function() {
-        analytics.settings.pageTracking.excludedRoutes = ['/abc'];
-        location.path('/abc');
-        rootScope.$emit('$stateChangeSuccess');
-        expect(analytics.pageTrack).not.toHaveBeenCalled();
-      });
-
-      it ('should not allow for multiple route exclusions to be specified', function() {
-        analytics.settings.pageTracking.excludedRoutes = ['/def','/abc'];
-        // Ignore excluded route
-        location.path('/abc');
-        rootScope.$emit('$stateChangeSuccess');
-        expect(analytics.pageTrack).not.toHaveBeenCalled();
-        // Ignore excluded route
-        location.path('/def');
-        rootScope.$emit('$stateChangeSuccess');
-        expect(analytics.pageTrack).not.toHaveBeenCalled();
-        // Track non-excluded route
-        location.path('/ghi');
-        rootScope.$emit('$stateChangeSuccess');
-        expect(analytics.pageTrack).toHaveBeenCalledWith('/ghi', location);
-      });
-
-      it ('should allow specifying excluded routes as regular expressions', function() {
-        analytics.settings.pageTracking.excludedRoutes = [/\/sections\/\d+\/pages\/\d+/];
-        // Ignore excluded route
-        location.path('/sections/123/pages/456');
-        rootScope.$emit('$stateChangeSuccess');
-        expect(analytics.pageTrack).not.toHaveBeenCalled();
-      });
-
-    });
-
   });
 
   describe('$analyticsProvider', function() {
@@ -192,13 +118,11 @@ describe('Module: angulartics', function() {
       var expectedHandler = [
         'pageTrack',
         'eventTrack',
-        'exceptionTrack',
         'setUsername',
         'setUserProperties',
         'setUserPropertiesOnce',
         'setSuperProperties',
-        'setSuperPropertiesOnce',
-        'userTimings'
+        'setSuperPropertiesOnce'
       ];
       var capitalize = function(input) {
         return input.replace(/^./, function(match) {
@@ -253,9 +177,9 @@ describe('Module: angulartics', function() {
         $analytics.eventTrack('bar'); // This event should be buffered
 
         $analyticsProvider.registerEventTrack(eventTrackSpy); // This should immediately flush
-        expect(eventTrackSpy.calls.count()).toEqual(2);
-        expect(eventTrackSpy.calls.argsFor(0)).toEqual(['foo']);
-        expect(eventTrackSpy.calls.argsFor(1)).toEqual(['bar']);
+        expect(eventTrackSpy.calls.length).toEqual(2);
+        expect(eventTrackSpy.calls[0].args).toEqual(['foo']);
+        expect(eventTrackSpy.calls[1].args).toEqual(['bar']);
       });
 
       it('should not buffer events if not waiting on any vendors', function() {
@@ -273,14 +197,14 @@ describe('Module: angulartics', function() {
         expect(eventTrackSpy).toHaveBeenCalledWith('foo');
 
         $analytics.eventTrack('bar');
-        expect(eventTrackSpy.calls.count()).toEqual(2);
-        expect(eventTrackSpy.calls.argsFor(1)).toEqual(['bar']);
+        expect(eventTrackSpy.calls.length).toEqual(2);
+        expect(eventTrackSpy.calls[1].args).toEqual(['bar']);
 
         var secondVendor = jasmine.createSpy('secondVendor');
         $analyticsProvider.registerEventTrack(secondVendor); // This should immediately flush
-        expect(secondVendor.calls.count()).toEqual(2);
-        expect(secondVendor.calls.argsFor(0)).toEqual(['foo']);
-        expect(secondVendor.calls.argsFor(1)).toEqual(['bar']);
+        expect(secondVendor.calls.length).toEqual(2);
+        expect(secondVendor.calls[0].args).toEqual(['foo']);
+        expect(secondVendor.calls[1].args).toEqual(['bar']);
 
       });
     });

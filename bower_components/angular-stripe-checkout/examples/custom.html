@@ -15,8 +15,8 @@
       <button ng-click="ctrl.doCheckout()">Buy</button>
     </script>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-route.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.1/angular.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.1/angular-route.js"></script>
     <script src="../angular-stripe-checkout.js"></script>
 
     <script>
@@ -57,6 +57,9 @@
         .controller("CustomExampleController",function($log, StripeCheckout) {
           // You should configure a handler when the view is loaded,
           // just as you would if you were using checkout.js directly.
+          //
+          // Unlike a vanilla Stripe Checkout handler, this one can be
+          // reused as many times as you like.
           var handler = StripeCheckout.configure({
               name: "Custom Example",
               token: function(token, args) {

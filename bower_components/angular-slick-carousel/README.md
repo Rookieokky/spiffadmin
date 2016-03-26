@@ -43,13 +43,11 @@ as either a `<div>` attribute or a `<slick>` element.
 
 ### Attributes & Event ###
 `settings`: optional `Object` containing any of the slick options. Consult [here](http://kenwheeler.github.io/slick/#settings).
- - `enabled` should slick be enabled or not. Default to true. Example below
  - `method` optional containing slick method. discussed [below](#method) in detail
  - `event` optional containing slick event
 
 ```javascript
 $scope.slickConfig = {
-    enabled: true,
     autoplay: true,
     draggable: false,  
     autoplaySpeed: 3000,
@@ -62,23 +60,6 @@ $scope.slickConfig = {
     }
 };
 ```
-### Enable/disable slick ###
-Slick can be easily switched on and off by using `enabled` settings flag.
-```js
-    $scope.slickConfig = {
-        enabled: true,
-    }
-    $scope.toggleSlick = function() {
-      $scope.slickConfig.enabled = !$scope.slickConfig.enabled;
-    }
-```
-```html
-    <slick settings="slickConfig">
-     ...
-    </slick>
-    <button ng-click="toggleSlick()">Toggle</button>
-```
-
 
 ### Method ###
 1. All the functions in the plugin are exposed through a control
@@ -139,20 +120,3 @@ For change slide content, you have to set `ng-if` to destroy and init it
     }])
   ```
 
-### FAQ ###
-Q: After change data, could i keep the current slide index?
-A: For this directive, this will destroy and init slick when updating data. You could get current index by event. 
-example:
-```js
-    $scope.currentIndex = 0;
-    $scope.slickConfig = {
-        event: {
-            afterChange: function (event, slick, currentSlide, nextSlide) {
-              $scope.currentIndex = currentSlide; // save current index each time
-            }
-            init: function (event, slick) {
-              slick.slickGoTo($scope.currentIndex); // slide to correct index when init
-            }
-        }
-    };
-```

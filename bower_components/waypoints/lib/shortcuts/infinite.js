@@ -1,5 +1,5 @@
 /*!
-Waypoints Infinite Scroll Shortcut - 4.0.0
+Waypoints Infinite Scroll Shortcut - 3.1.1
 Copyright © 2011-2015 Caleb Troughton
 Licensed under the MIT license.
 https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
@@ -57,7 +57,7 @@ https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
           this.$more.remove()
         }
 
-        this.options.onAfterPageLoad($items)
+        this.options.onAfterPageLoad()
       }, this))
     }, this)
   }

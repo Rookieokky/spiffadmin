@@ -1,5 +1,5 @@
 /*!
-Waypoints Sticky Element Shortcut - 4.0.0
+Waypoints Sticky Element Shortcut - 3.1.1
 Copyright © 2011-2015 Caleb Troughton
 Licensed under the MIT license.
 https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
@@ -41,9 +41,7 @@ https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
 
   /* Private */
   Sticky.prototype.createWrapper = function() {
-    if (this.options.wrapper) {
-      this.$element.wrap(this.options.wrapper)
-    }
+    this.$element.wrap(this.options.wrapper)
     this.$wrapper = this.$element.parent()
     this.wrapper = this.$wrapper[0]
   }
@@ -52,10 +50,7 @@ https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
   Sticky.prototype.destroy = function() {
     if (this.$element.parent()[0] === this.wrapper) {
       this.waypoint.destroy()
-      this.$element.removeClass(this.options.stuckClass)
-      if (this.options.wrapper) {
-        this.$element.unwrap()
-      }
+      this.$element.removeClass(this.options.stuckClass).unwrap()
     }
   }
 

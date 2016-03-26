@@ -5,27 +5,24 @@ var MODULE_NAME = "stripe.checkout";
 var STRIPE_CHECKOUT_URL = "https://checkout.stripe.com/checkout.js";
 
 var COPIED_OPTION_ATTRIBUTES = {
+  key:         "data-key",
+  image:       "data-image",
+  name:        "data-name",
+  description: "data-description",
   amount:      "data-amount",
   currency:    "data-currency",
-  description: "data-description",
-  email:       "data-email",
-  image:       "data-image",
-  key:         "data-key",
-  label:       "data-label",
-  locale:      "data-locale",
-  name:        "data-name",
   panelLabel:  "data-panel-label",
-  zipCode:     "data-zip-code"
+  zipCode:     "data-zip-code",
+  email:       "data-email",
+  label:       "data-label"
 };
 
 var BOOLEAN_OPTION_ATTRIBUTES = {
-  address:         "data-address",
-  alipay:          "data-alipay",
-  alipayReusable:  "data-alipay-reusable",
-  allowRememberMe: "data-allow-remember-me",
-  billingAddress:  "data-billing-address",
   bitcoin:         "data-bitcoin",
-  shippingAddress: "data-shipping-address"
+  allowRememberMe: "data-allow-remember-me",
+  address:         "data-address",
+  billingAddress:  "data-billingAddress",
+  shippingAddress: "data-shippingAddress"
 };
 
 
@@ -51,7 +48,8 @@ function StripeCheckoutDirective($parse, StripeCheckout) {
   return { link: link };
 
   function link(scope, el, attrs) {
-    var handler;
+    var handler,
+        callback = $parse(attrs.stripeCheckout)(scope);
 
     StripeCheckout.load()
       .then(function() {
@@ -61,9 +59,7 @@ function StripeCheckoutDirective($parse, StripeCheckout) {
     el.on("click",function() {
       if (handler)
         handler.open(getOptions(el)).then(function(result) {
-          var callback = $parse(attrs.stripeCheckout)(scope);
-          if (typeof callback === 'function')
-            callback.apply(null,result);
+          callback.apply(null,result);
         });
     });
   }
@@ -163,15 +159,6 @@ function StripeHandlerWrapper($q, options) {
 
     return deferred.promise;
   };
-
-  this.close = function() {
-    success = false;
-
-    handler.close();
-
-    if (options.closed) options.closed();
-    if (deferred) deferred.reject();
-  }
 }
 
 

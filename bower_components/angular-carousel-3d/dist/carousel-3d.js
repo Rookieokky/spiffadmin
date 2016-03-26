@@ -1,7 +1,15 @@
 /*!
- * Name: angular-carousel-3d
- * GIT Page: https://github.com/Wlada/angular-carousel-3d
- * Version: 0.1.1 - 2016-03-22T20:41:29.039Z
+ * angular-carousel-3d
+ * 
+ * Version: 0.0.5 - 2015-10-06T21:00:31.924Z
+ * License: MIT
+ */
+
+
+/*!
+ * angular-carousel-3d
+ * 
+ * Version: 0.0.5
  * License: MIT
  */
 
@@ -11,145 +19,200 @@
 
     angular
         .module('angular-carousel-3d', [
-            'swipe' 
-        ]);
-
-
-})();
-(function () {
-    'use strict';
-
-    angular
-        .module('angular-carousel-3d')
-        .directive('carousel3dSlide', carousel3dSlide);
-
-    // ==
-    // == Directive 3d
-    carousel3dSlide.$inject = [];
-
-    // == HTML rendering directive
-    function carousel3dSlide() {
-        var carousel3dSlide = {
-            require: '^carousel3d',
-            restrict: 'AE',
-            template: '<div class=\"slide-3d\" ng-click=\"carousel3d.slideClicked($index)\" ng-swipe-left=\"carousel3d.goPrev()\" ng-swipe-right=\"carousel3d.goNext()\" ng-transclude></div>',
-            replace: true,
-            transclude: true,
-            link: linkFunc
-        };
-
-        // ==
-        // == Directive link
-        // ========================================
-        function linkFunc(scope, element, attrs, ctrl, transclude) {
-            scope.carousel3d = ctrl;
-        }
-
-        return carousel3dSlide;
-    }
-})();
-
-(function () {
-    'use strict';
-
-    angular
-        .module('angular-carousel-3d')
+            'swipe'
+        ])
+        .factory("PreloaderService", PreloaderService)
+        .directive('carousel3d', carousel3d)
         .controller('Carousel3dController', Carousel3dController);
 
     // ==
     // == Directive Controller
     // ========================================
-    Carousel3dController.$inject = ['$scope', '$element', '$attrs', '$timeout', '$interval', '$log', '$window', 'Carousel3dService'];
+    Carousel3dController.$inject = ['$scope', '$element', '$attrs', '$timeout', '$log', 'PreloaderService'];
 
-    function Carousel3dController($scope, $element, $attrs, $timeout, $interval, $log, $window, Carousel3dService) {
+    function Carousel3dController($scope, $element, $attrs, $timeout, $log, PreloaderService) {
         var vm = this;
 
         vm.isLoading = true;
         vm.isSuccessful = false;
         vm.isRendered = false;
         vm.percentLoaded = 0;
-        vm.autoRotation = null;
+        vm.options = {
+            sourceProp: 'src',
+            visible: 3,
+            perspective: 35,
+            animationSpeed: 500,
+            startSlide: 0,
+            dir: 'ltr',
+            width: 480,
+            height: 360,
+            border: 10,
+            space: 'auto',
+            topSpace: 'auto'
+        };
 
+        // == Bind functions to controller
+        vm.init = init;
         vm.slideClicked = slideClicked;
         vm.goPrev = goPrev;
         vm.goNext = goNext;
 
-        var $wrapper = null,
-            $slides = [],
-            carousel3d = {};
+        // == Carousel wrapper element
+        var $wrapper = null;
+
+        // == Extend default carousel options with directive options attribute
+        angular.extend(vm.options, vm.carousel3dOptions);
+
+        // == Set initial directive height
+        $element.css({
+            'height': vm.options.height + vm.options.border + 'px'
+        });
 
         // == Watch changes on model and options object
-        $scope.$watch('[vm.model, vm.options]', init, true);
+        $scope.$watch('[vm.ngModel, vm.carousel3dOptions]', function () {
+
+            PreloaderService
+                .preloadImages(vm.ngModel, vm.options.sourceProp)
+                .then(
+                // == Preloaded images success resolve handler
+                function handleResolve(imageLocations) {
+                    vm.isLoading = false;
+                    vm.isSuccessful = true;
+
+                    $timeout(function () {
+                        init();
+                    });
+                },
+                // == Preloaded images reject  handler
+                function handleReject(imageLocation) {
+                    vm.isLoading = false;
+                    vm.isSuccessful = false;
+                },
+                // == Preloaded images notify handler which is executed multiple times during preload
+                function handleNotify(event) {
+                    vm.percentLoaded = event.percent;
+                }
+            );
+
+        }, true);
 
         function init() {
-            Carousel3dService
-                .build(vm.model, vm.options)
-                .then(
-                    function handleResolve(carousel) {
 
-                        carousel3d = carousel;
+            // == Clear properties
+            vm.slides = [];
+            vm.rightItems = [];
+            vm.leftItems = [];
+            vm.rightOutItem = null;
+            vm.leftOutItem = null;
+            vm.total = 0;
+            vm.centerSlide = null;
+            vm.currentIndex = null;
+            vm.lock = false;
 
-                        vm.slides = carousel3d.slides;
-                        vm.controls = carousel3d.controls;
-                        vm.isLoading = false;
-                        vm.isSuccessful = true;
+            // == Extend default carousel options with directive options attribute
+            angular.extend(vm.options, vm.carousel3dOptions);
 
-                        var outerHeight = carousel3d.getOuterHeight(),
-                            outerWidth = carousel3d.getOuterWidth();
+            // == Cache carousel wrapper element
+            $wrapper = angular.element($element[0].querySelector('.carousel-3d'));
 
-                        $element.css({'height': outerHeight + 'px'});
+            // == Cache Carousel slides
+            var $slides = $wrapper.children();
 
-                        $timeout(function () {
+            if (!$slides.length > 0) {
+                return false
+            }
 
-                            $wrapper = angular.element($element[0].querySelector('.carousel-3d'));
-                            $wrapper.css({'width': outerWidth + 'px', 'height': outerHeight + 'px'});
-                            $slides = $wrapper.children();
+            // == Set carousel wrapper view port in the center of the carousel
+            $wrapper.css({
+                'height': vm.options.height + vm.options.border + 'px',
+                'width': 'auto',
+            });
 
-                            render();
-                        });
+            //== Update slides with attributes  
+            for (var i = 0; i < $slides.length; i++) {
 
+                var slide = $slides[i],
+                    $slide = angular.element(slide),
+                    attributes = {
+                        'outerwidth': vm.options.width + vm.options.border,
+                        'outerheight': vm.options.height + vm.options.border,
+                        'height': vm.options.height,
+                        'width': 'auto',
+                        'index': i
                     },
-                    // == Preloaded images reject  handler
-                    function handleReject(carousel) {
+                    cssStyles = {
+                        visibility: 'hidden',
+                        'border-width': vm.options.border + 'px'
+                    };
 
-                        $element.css({'height': carousel.getOuterHeight() + 'px'});
+                $slide.attr(attributes);
+                $slide.css(cssStyles);
 
-                        vm.isLoading = false;
-                        vm.isSuccessful = false;
-                    },
-                    // == Preloaded images notify handler which is executed multiple times during preload
-                    function handleNotify(event) {
-                        vm.percentLoaded = event.percent;
-                    }
-                );
+                vm.slides.push($slide);
+            }
 
+            vm.total = vm.slides.length;
+
+            //== Set startSlide
+            vm.options.startSlide = (vm.options.startSlide < 0 || vm.options.startSlide > vm.total) ? 0 : vm.options.startSlide;
+            vm.currentIndex = vm.options.startSlide;
+
+            //== Set initial currentSlide
+            vm.selectedSlide = vm.slides[vm.currentIndex];
+
+            //== Fix slides number
+            vm.options.visible = (vm.options.visible > vm.total) ? vm.total : vm.options.visible;
+
+            if (vm.options.visible === 2) {
+                vm.options.visible = (vm.options.visible % 2) ? vm.options.visible : vm.options.visible;
+            } else {
+                vm.options.visible = (vm.options.visible % 2) ? vm.options.visible : vm.options.visible - 1;
+            }
+
+            render();
         }
 
         function render(animate, speedTime) {
-            carousel3d.setSlides();
 
-            var outerHeight = carousel3d.getOuterHeight(),
-                outerWidth = carousel3d.getOuterWidth(),
-                slideTop = (carousel3d.topSpace === "auto") ? 0 : ((outerHeight / 2) - (outerHeight / 2)),
-                slideLeft = ((carousel3d.width / 2) - (outerWidth / 2)),
-                speed = (speedTime) ? (speedTime / 1000) : (carousel3d.animationSpeed / 1000),
-                zIndex = 999;
+            var num = Math.floor(vm.options.visible / 2) + 1;
 
-            // == Set other slides styles
-            angular.forEach(carousel3d.slides, function (slide, index) {
-                var css = {
-                    position: 'absolute',
-                    opacity: 0,
-                    visibility: 'hidden',
-                    overflow: 'hidden',
-                    top: slideTop + 'px',
-                    'border-width': carousel3d.border + 'px',
-                    width: outerWidth,
-                    height: outerHeight
-                };
+            vm.leftItems = [];
+            vm.rightItems = [];
 
-                if (animate) {
-                    angular.extend(css, {
+            for (var m = 1; m < num; m++) {
+                var eq1 = (vm.options.dir == "ltr") ? (vm.currentIndex + m) % (vm.total) : (vm.currentIndex - m) % (vm.total);
+                vm.leftItems.push(getSlide(eq1));
+
+
+                var eq2 = (vm.options.dir == "ltr") ? (vm.currentIndex - m) % (vm.total) : (vm.currentIndex + m) % (vm.total);
+                vm.rightItems.push(getSlide(eq2));
+            }
+
+            vm.leftOutItem = getSlide(vm.currentIndex - num);
+            vm.rightOutItem = ((vm.total - vm.currentIndex - num) <= 0) ?
+                              getSlide(-parseInt(vm.total - vm.currentIndex - num)) :
+                              getSlide(vm.currentIndex + num);
+
+            var leftOut = vm.leftOutItem,
+                rightOut = vm.rightOutItem;
+
+            if (vm.options.dir == "ltr") {
+                vm.leftOutItem = rightOut;
+                vm.rightOutItem = leftOut;
+            }
+
+            //Set initial slides styles
+            var slideTop = (vm.options.topSpace == "auto") ? ((vm.options.height / 2) - (parseInt(vm.selectedSlide.attr('outerheight')) / 2)) : 0,
+                slideLeft = ((vm.options.width / 2) - (parseInt(vm.selectedSlide.attr('outerwidth')) / 2)),
+                center = (vm.options.width / 4),
+                zIndex = 999,
+                css = {},
+                speed = (speedTime) ? (speedTime / 1000) : (vm.options.animationSpeed / 1000),
+                slide;
+
+            if (animate) {
+                for (var l = 0; l < vm.slides.length; l++) {
+                    vm.slides[l].css({
                         '-webkit-transition': "all " + speed + "s ",
                         '-moz-transition': "all " + speed + "s ",
                         '-o-transition': "all " + speed + "s ",
@@ -157,17 +220,29 @@
                         'transition': "all " + speed + "s "
                     });
                 }
+            }
 
-                getSlide(index).css(css);
-            });
 
-            // == Set first slide styles
-            getSlide(carousel3d.currentIndex)
+            for (var k = 0; k < vm.slides.length; k++) {
+                vm.slides[k].css({
+                    position: 'absolute',
+                    opacity: 0,
+                    visibility: 'hidden',
+                    overflow: 'hidden',
+                    top: slideTop + 'px'
+                });
+            }
+
+            vm.selectedSlide
                 .addClass('current')
                 .css({
                     zIndex: zIndex,
                     opacity: 1,
-                    visibility: 'visible',
+                    visibility: 'visible'
+                });
+
+            vm.selectedSlide
+                .css({
                     '-webkit-transform': 'none',
                     '-moz-transform': 'none',
                     '-o-transform': 'none',
@@ -175,67 +250,63 @@
                     'transform': 'none',
                     left: slideLeft + 'px',
                     top: slideTop + 'px',
-                    width: outerWidth + "px",
-                    height: outerHeight + "px"
+                    width: vm.selectedSlide.attr('width') + "px",
+                    height: vm.selectedSlide.attr('height') + "px"
                 });
 
-            angular.forEach(carousel3d.rightSlides, function (slide, index) {
-                var css = setCss(index, zIndex, true);
+            for (var i = 0; i < vm.rightItems.length; i++) {
+                slide = vm.rightItems[i];
 
-                zIndex -= index + 1;
+                zIndex -= i + 1;
+                css = setCss(slide, i, zIndex, true);
 
-                getSlide(slide)
+                slide
                     .css(css)
                     .css({
                         opacity: 1,
                         visibility: 'visible',
                         zIndex: zIndex
                     });
-            });
+            }
 
-            angular.forEach(carousel3d.leftSlides, function (slide, index) {
-                var css = setCss(index, zIndex);
+            for (var j = 0; j < vm.leftItems.length; j++) {
+                slide = vm.leftItems[j];
 
-                zIndex -= index + 1;
+                zIndex -= j + 1;
+                css = setCss(slide, j, zIndex);
 
-                getSlide(slide)
+                slide
                     .css(css)
                     .css({
                         opacity: 1,
                         visibility: 'visible',
                         zIndex: zIndex
                     });
-            });
-
-            if (carousel3d.total > carousel3d.visible) {
-
-                var rCSS = setCss(carousel3d.rightSlides.length - 1, carousel3d.rightSlides.length - 1, true),
-                    lCSS = setCss(carousel3d.leftSlides.length - 1, carousel3d.leftSlides.length - 1);
-
-                getSlide(carousel3d.rightOutSlide).css(rCSS);
-                getSlide(carousel3d.leftOutSlide).css(lCSS);
             }
 
-            if(carousel3d.autoRotationSpeed > 0) {
-                vm.autoRotation = $interval(function() {
-                    if(vm.dir === 'rtl') {
-                        vm.goPrev();
-                    } else {
-                        vm.goNext();
-                    }
-                }, carousel3d.autoRotationSpeed);
+            if (vm.total > vm.options.visible) {
+
+                var rCSS = setCss(vm.rightOutItem, vm.leftItems.length - 0.5, vm.leftItems.length - 1, true),
+                    lCSS = setCss(vm.leftOutItem, vm.leftItems.length - 0.5, vm.leftItems.length - 1);
+
+                vm.rightOutItem.css(rCSS);
+                vm.leftOutItem.css(lCSS);
             }
+
             vm.isRendered = true;
         }
 
-        function setCss(i, zIndex, positive) {
+        function setCss(slide, i, zIndex, positive) {
 
-            var leftRemain = (carousel3d.space == "auto") ? parseInt((i + 1) * (carousel3d.width / 1.5)) : parseInt((i + 1) * (carousel3d.space)),
+            var leftRemain = (vm.options.space == "auto") ?
+                             parseInt((i + 1) * (parseInt(angular.element(slide).attr('width')) / 1.5)) :
+                             parseInt((i + 1) * (vm.options.space)),
+
                 transform = (positive) ?
-                            'translateX(' + (leftRemain) + 'px) translateZ(-' + (carousel3d.inverseScaling + ((i + 1) * 100)) + 'px) rotateY(-' + carousel3d.perspective + 'deg)' :
-                            'translateX(-' + (leftRemain) + 'px) translateZ(-' + (carousel3d.inverseScaling + ((i + 1) * 100)) + 'px) rotateY(' + carousel3d.perspective + 'deg)',
+                            'translateX(' + (leftRemain) + 'px) translateZ(-' + (250 + ((i + 1) * 110)) + 'px) rotateY(-' + vm.options.perspective + 'deg)' :
+                            'translateX(-' + (leftRemain) + 'px) translateZ(-' + (250 + ((i + 1) * 110)) + 'px) rotateY(' + vm.options.perspective + 'deg)',
                 left = "0%",
-                top = (carousel3d.topSpace === "auto") ? "none" : parseInt((i + 1) * (carousel3d.space)),
+                top = (vm.options.topSpace == "auto") ? "none" : parseInt((i + 1) * (vm.options.space)),
                 width = "none",
                 height = "none",
                 overflow = "visible";
@@ -257,51 +328,57 @@
 
         function goSlide(index, motionless, farchange) {
 
-            if (angular.isFunction(vm.onBeforeChange)) {
+
+            if (vm.onBeforeChange) {
                 vm.onBeforeChange({
-                    index: carousel3d.currentIndex
+                    index: vm.currentIndex
                 });
             }
 
-            carousel3d.setCurrentIndex((index < 0 || index > carousel3d.total - 1) ? 0 : index);
+            vm.currentIndex = (index < 0 || index > vm.total - 1) ? 0 : index;
 
-            if (carousel3d.isLastSlide()) {
-
-                if (angular.isFunction(vm.onLastSlide)) {
+            if (vm.currentIndex == vm.total - 1) {
+                if (vm.onLastSlide) {
                     vm.onLastSlide({
-                        index: carousel3d.currentIndex
+                        index: vm.currentIndex
                     });
                 }
             }
 
-            angular.forEach($slides, function (slide, index) {
-                angular.element($slides[index]).removeClass('current');
-            });
+            vm.selectedSlide = vm.slides[vm.currentIndex];
 
-            carousel3d.setLock(true);
+            for (var i = 0; i < vm.slides.length; i++) {
+                vm.slides[i].removeClass('current');
+            }
 
-            render(true, carousel3d.animationSpeed);
+            vm.lock = true;
+
+            render(true, vm.options.animationSpeed);
 
             $timeout(function () {
                 animationEnd();
-            }, carousel3d.animationSpeed);
+            }, vm.options.animationSpeed);
 
-            return farchange;
+            if (farchange) {
+                return false;
+            }
+
+            return true;
         }
 
         function goNext(farchange) {
 
             farchange = (farchange) ? farchange : false;
 
-            if (!farchange && carousel3d.getLock()) {
+            if (!farchange && vm.lock) {
                 return false;
             }
 
-            if (carousel3d.isLastSlide()) {
+            if (vm.currentIndex == vm.total) {
                 goSlide(0, false, farchange);
 
             } else {
-                goSlide(carousel3d.currentIndex + 1, false, farchange);
+                goSlide(vm.currentIndex + 1, false, farchange);
             }
 
             return false;
@@ -311,24 +388,24 @@
 
             farchange = (farchange) ? farchange : false;
 
-            if (!farchange && carousel3d.getLock()) {
+            if (!farchange && vm.lock) {
                 return false;
             }
 
-            if (carousel3d.isFirstSlide()) {
-                goSlide(carousel3d.total - 1, false, farchange);
+            if (vm.currentIndex == 0) {
+                goSlide(vm.total - 1, false, farchange);
 
             } else {
-                goSlide(carousel3d.currentIndex - 1, false, farchange);
+                goSlide(vm.currentIndex - 1, false, farchange);
             }
 
             return false;
         }
 
         function goFar(index) {
-            var diff = (index === carousel3d.total - 1 && carousel3d.isFirstSlide()) ? -1 : (index - carousel3d.currentIndex);
+            var diff = (index == vm.total - 1 && vm.currentIndex == 0) ? -1 : (index - vm.currentIndex);
 
-            if (carousel3d.isLastSlide() && index === 0) {
+            if (vm.currentIndex == vm.total - 1 && index == 0) {
                 diff = 1;
             }
 
@@ -336,57 +413,48 @@
                 timeBuff = 0;
 
             for (var i = 0; i < diff2; i++) {
-                var timeout = (diff2 === 1) ? 0 : (timeBuff);
+                var timeout = (diff2 == 1) ? 0 : (timeBuff);
 
                 $timeout(function () {
                     (diff < 0) ? goPrev(diff2) : goNext(diff2);
                 }, timeout);
 
-                timeBuff += (carousel3d.animationSpeed / (diff2));
+                timeBuff += (vm.options.animationSpeed / (diff2));
             }
         }
 
         function animationEnd() {
-            carousel3d.setLock(false);
+            vm.lock = false;
 
             if (vm.onSlideChange) {
                 vm.onSlideChange({
-                    index: carousel3d.currentIndex
+                    index: vm.currentIndex
                 });
             }
         }
 
         function getSlide(index) {
-            return (index >= 0) ? angular.element($slides[index]) : angular.element($slides[carousel3d.total + index]);
+            return (index >= 0) ? vm.slides[index] : vm.slides[vm.slides.length + index];
         }
 
         function slideClicked(index) {
-            $interval.cancel(vm.autoRotation);
 
-            if (carousel3d.currentIndex != index) {
+            if (vm.currentIndex != index) {
                 goFar(index);
 
             } else {
                 if (vm.onSelectedClick) {
                     vm.onSelectedClick({
-                        index: carousel3d.currentIndex
+                        index: vm.currentIndex
                     });
                 }
             }
         }
     }
 
-})();
-(function () {
-    'use strict';
-
-    angular
-        .module('angular-carousel-3d')
-        .directive('carousel3d', carousel3d);
-
-
     // ==
     // == Directive 3d
+    // ========================================
     carousel3d.$inject = ['$timeout'];
 
     function carousel3d($timeout) {
@@ -400,19 +468,16 @@
             '       <div class="carousel-3d-loader-percentage">{{ vm.percentLoaded }}</div>' +
             '   </div>' +
             '   <div ng-switch-when="false" ng-switch="vm.isSuccessful">' +
-            '       <div class=\"carousel-3d\" ng-switch-when=\"true\" ng-show="vm.isRendered" ng-transclude>' +
+            '       <div class=\"carousel-3d\" ng-switch-when=\"true\" ng-show="vm.isRendered">' +
+            '           <img ng-repeat=\"image in vm.ngModel track by $index\" ng-src=\"{{image[vm.options.sourceProp]}}\" class=\"slide-3d\" ng-click=\"vm.slideClicked($index)\" ng-swipe-left=\"vm.goPrev()\" ng-swipe-right=\"vm.goNext()\">' +
             '       </div>' +
             '       <p ng-switch-when=\"false\" class="carousel-3d-loader-error">There was a problem during load</p>' +
-            '       <div ng-if="vm.controls" class="carousel-3d-controls">' +
-            '           <div class="carousel-3d-next arrow-left" ng-click=\"vm.goPrev()\"></div>' +
-            '           <div class="carousel-3d-prev arrow-right" ng-click=\"vm.goNext()\"></div>' +
-            '       </div>' +
             '   </div>' +
             '</div>',
             replace: true,
             scope: {
-                model: '=ngModel',
-                options: '=',
+                ngModel: '=',
+                carousel3dOptions: '=',
                 onSelectedClick: '&',
                 onSlideChange: '&',
                 onLastSlide: '&',
@@ -420,7 +485,6 @@
             },
             controller: 'Carousel3dController as vm',
             bindToController: true,
-            transclude: true,
             compile: compileFunc,
             link: linkFunc
         };
@@ -445,27 +509,19 @@
         return carousel3d;
     }
 
-})();
-(function () {
-    'use strict';
-
-    angular
-        .module('angular-carousel-3d')
-        .factory("Carousel3dService", Carousel3dService);
-
-    // ==
-    // == Directive Service
+    // Preloading Images In AngularJS With Promises
+    // http://www.bennadel.com/blog/2597-preloading-images-in-angularjs-with-promises.htm
+    //
+    // == Preloader Factory
     // ========================================
-    Carousel3dService.$inject = ['$rootScope', '$q', '$log'];
+    PreloaderService.$inject = ['$q', '$rootScope'];
 
-    function Carousel3dService($rootScope, $q, $log) {
+    function PreloaderService($q, $rootScope) {
 
-        function Carousel3d(slides, params) {
-            this.slides = slides || [];
-            this.leftSlides = [];
-            this.rightSlides = [];
-            this.leftOutSlide = '';
-            this.rightOutSlide = '';
+        function Preloader(imageLocations, imageProp) {
+            this.imageLocations = imageLocations;
+            this.imageProp = imageProp;
+            this.imageCount = this.imageLocations.length;
             this.loadCount = 0;
             this.errorCount = 0;
             this.states = {
@@ -474,77 +530,26 @@
                 RESOLVED: 3,
                 REJECTED: 4
             };
-            this.total = this.slides.length;
-            this.currentIndex = 0;
-            this.lock = false;
-            this.sourceProp = params.sourceProp;
-            this.visible = params.visible || 5;
-            this.perspective = params.perspective || 35;
-            this.animationSpeed = params.animationSpeed || 500;
-            this.dir = params.dir || 'ltr';
-            this.width = params.width || 360;
-            this.height = params.height || 270;
-            this.border = params.border || 0;
-            this.space = params.space || 'auto';
-            this.topSpace = params.topSpace || 'auto';
-            this.controls = params.controls || false;
-            this.startSlide = params.startSlide || 0;
-            this.inverseScaling = params.inverseScaling || 300;
-            this.autoRotationSpeed = params.autoRotationSpeed || 0;
             this.state = this.states.PENDING;
             this.deferred = $q.defer();
             this.promise = this.deferred.promise;
         }
 
-        // == Public Service methods
-        // ========================================
+        Preloader.preloadImages = function (imageLocations, imageProp) {
+            var preloader = new Preloader(imageLocations, imageProp);
 
-        Carousel3d.build = function (model, params) {
-            var carousel = new Carousel3d(model, params || {});
-
-            return carousel.load().promise.then(function () {
-                carousel.visible = (carousel.visible > carousel.total) ? carousel.total : carousel.visible;
-
-                carousel.currentIndex = carousel.startSlide > carousel.total - 1 ? carousel.total - 1 : params.startSlide;
-
-                try {
-                    if (carousel.visible !== 2) {
-                        carousel.visible = (carousel.visible % 2) ? carousel.visible : carousel.visible - 1;
-                    }
-
-                } catch (error) {
-                    $log.error(error);
-                }
-
-                return carousel;
-            });
-
+            return ( preloader.load() );
         };
 
-        // == Private Service methods
-        // ========================================
-
         var proto = {
-            constructor: Carousel3d,
+            constructor: Preloader,
             isInitiated: isInitiated,
             isRejected: isRejected,
             isResolved: isResolved,
             load: load,
             handleImageError: handleImageError,
             handleImageLoad: handleImageLoad,
-            loadImageLocation: loadImageLocation,
-            getTotalNumber: getTotalNumber,
-            setStartSlide: setStartSlide,
-            getSlides: getSlides,
-            setSlides: setSlides,
-            setCurrentIndex: setCurrentIndex,
-            getOuterWidth: getOuterWidth,
-            getOuterHeight: getOuterHeight,
-            setLock: setLock,
-            getLock: getLock,
-            isLastSlide: isLastSlide,
-            isFirstSlide: isFirstSlide,
-            getSourceProp: getSourceProp
+            loadImageLocation: loadImageLocation
         };
 
         function isInitiated() {
@@ -562,23 +567,16 @@
         function load() {
 
             if (this.isInitiated()) {
-                return this;
+                return ( this.promise );
             }
-
 
             this.state = this.states.LOADING;
 
-            if (!this.sourceProp) {
-                this.deferred.resolve(this);
-
-            } else {
-                for (var i = 0; i < this.total; i++) {
-                    this.loadImageLocation(this.slides[i]);
-                }
+            for (var i = 0; i < this.imageCount; i++) {
+                this.loadImageLocation(this.imageLocations[i][this.imageProp]);
             }
 
-
-            return this;
+            return ( this.promise );
         }
 
         function handleImageError(imageLocation) {
@@ -589,7 +587,7 @@
             }
 
             this.state = this.states.REJECTED;
-            this.deferred.reject(this);
+            this.deferred.reject(imageLocation);
         }
 
         function handleImageLoad(imageLocation) {
@@ -600,113 +598,41 @@
             }
 
             this.deferred.notify({
-                percent: Math.ceil(this.loadCount / this.total * 100),
+                percent: Math.ceil(this.loadCount / this.imageCount * 100),
                 imageLocation: imageLocation
             });
 
-            if (this.loadCount === this.total) {
+            if (this.loadCount === this.imageCount) {
                 this.state = this.states.RESOLVED;
-
-
-                this.deferred.resolve(this);
+                this.deferred.resolve(this.imageLocations);
             }
         }
 
         function loadImageLocation(imageLocation) {
 
-            var carousel = this,
+            var preloader = this,
                 image = new Image();
 
             image.onload = function (event) {
                 $rootScope.$apply(function () {
-                        carousel.handleImageLoad(event.target.src);
-                        image = event = null;
+                        preloader.handleImageLoad(event.target.src);
+                        preloader = image = event = null;
                     }
                 );
 
             };
             image.onerror = function (event) {
                 $rootScope.$apply(function () {
-                        carousel.handleImageError(event.target.src);
-                        image = event = null;
+                        preloader.handleImageError(event.target.src);
+                        preloader = image = event = null;
                     }
                 );
             };
-            image.src = imageLocation[this.sourceProp];
+            image.src = imageLocation;
         }
 
-        function getTotalNumber() {
-            return this.total;
-        }
+        angular.extend(Preloader.prototype, proto);
 
-        function setStartSlide(index) {
-            this.startSlide = (index < 0 || index > this.total) ? 0 : index;
-        }
-
-        function setCurrentIndex(index) {
-            return this.currentIndex = index;
-        }
-
-        function getOuterWidth() {
-            return parseInt(this.width + this.border);
-        }
-
-        function getOuterHeight() {
-            return parseInt(this.height + this.border, 10);
-        }
-
-        function setLock(value) {
-            return this.lock = value;
-        }
-
-        function getLock() {
-            return this.lock;
-        }
-
-        function getSlides() {
-            return this.slides;
-        }
-
-        function setSlides() {
-            var num = Math.floor(this.visible / 2) + 1,
-                dir = 'ltr';
-
-            this.leftSlides = [];
-            this.rightSlides = [];
-
-            for (var m = 1; m < num; m++) {
-                var eq1 = (this.dir === dir) ? (this.currentIndex + m) % (this.total) : (this.currentIndex - m) % (this.total),
-                    eq2 = (this.dir === dir) ? (this.currentIndex - m) % (this.total) : (this.currentIndex + m) % (this.total);
-
-                this.leftSlides.push(eq1);
-                this.rightSlides.push(eq2);
-            }
-
-            var rightOut = this.leftOutSlide = (this.currentIndex - num),
-                leftOut = this.rightOutSlide = ((this.total - this.currentIndex - num) <= 0) ? (-parseInt(this.total - this.currentIndex - num)) : (this.currentIndex + num);
-
-            if (this.dir === dir) {
-                this.leftOutSlide = rightOut;
-                this.rightOutSlide = leftOut;
-            }
-
-            return this.slides;
-        }
-
-        function isLastSlide() {
-            return this.currentIndex === this.total - 1;
-        }
-
-        function isFirstSlide() {
-            return this.currentIndex === 0;
-        }
-
-        function getSourceProp() {
-            return this.sourceProp;
-        }
-
-        angular.extend(Carousel3d.prototype, proto);
-
-        return ( Carousel3d );
+        return ( Preloader );
     }
 })();

@@ -1,6 +1,6 @@
 module.exports = function(config) {
   'use strict';
-
+  
   config.set({
 
     basePath: './',
@@ -14,10 +14,6 @@ module.exports = function(config) {
       'components/angular-mocks/angular-mocks.js',
       'src/**/*.js',
       'test/**/*.js'
-    ],
-
-    exclude: [
-      'src/index.js'
     ],
 
     autoWatch: true,
