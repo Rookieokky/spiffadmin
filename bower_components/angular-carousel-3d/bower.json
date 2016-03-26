@@ -1,11 +1,14 @@
 {
   "name": "angular-carousel-3d",
-  "version": "0.0.2",
+  "version": "0.1.1",
   "authors": [
     "Vladimir Bujanovic <bujanovic@gmail.com>"
   ],
   "description": "Angular Carousel 3d",
-  "main": "dist/carousel-3d.js, dist/carousel-3d.js",
+  "main": [
+    "./dist/carousel-3d.css",
+    "./dist/carousel-3d.js"
+  ],
   "license": "MIT",
   "private": false,
   "ignore": [

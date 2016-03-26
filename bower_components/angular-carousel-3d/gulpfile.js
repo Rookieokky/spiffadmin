@@ -23,8 +23,8 @@ var config = {
   pkg : JSON.parse(fs.readFileSync('./package.json')),
   banner:
       '/*!\n' +
-      ' * <%= pkg.name %>\n' +
-      ' * <%= pkg.homepage %>\n' +
+      ' * Name: <%= pkg.name %>\n' +
+      ' * GIT Page: <%= pkg.homepage %>\n' +
       ' * Version: <%= pkg.version %> - <%= timestamp %>\n' +
       ' * License: <%= pkg.license %>\n' +
       ' */\n\n\n'
@@ -65,7 +65,7 @@ gulp.task('scripts', function() {
   };
 
   function buildDistJS(){
-    return gulp.src('src/carousel-3d.js')
+    return gulp.src('src/*.js')
       .pipe(plumber({
         errorHandler: handleError
       }))

@@ -1,4 +1,4 @@
-angular-stripe [![Build Status](https://travis-ci.org/bendrucker/angular-stripe.svg?branch=master)](https://travis-ci.org/bendrucker/angular-stripe) [![Code Climate](https://codeclimate.com/github/bendrucker/angular-stripe/badges/gpa.svg)](https://codeclimate.com/github/bendrucker/angular-stripe) [![Test Coverage](https://codeclimate.com/github/bendrucker/angular-stripe/badges/coverage.svg)](https://codeclimate.com/github/bendrucker/angular-stripe) [![NPM version](https://badge.fury.io/js/angular-stripe.svg)](http://badge.fury.io/js/angular-stripe)
+angular-stripe [![Build Status](https://travis-ci.org/bendrucker/angular-stripe.svg?branch=master)](https://travis-ci.org/bendrucker/angular-stripe)
 ==============
 
 Angular provider for easy interaction with [Stripe.js](https://stripe.com/docs/stripe.js). angular-stripe wraps Stripe.js's async operations in `$q` promises, making response handling easier and eliminating `$scope.$apply` calls and other repetitive boilerplate in your application. Check out [angular-credit-cards](https://github.com/bendrucker/angular-credit-cards) for validating your credit card forms. angular-stripe is powered by [stripe-as-promised](https://github.com/bendrucker/stripe-as-promised).
@@ -6,9 +6,9 @@ Angular provider for easy interaction with [Stripe.js](https://stripe.com/docs/s
 ## Setup
 ```bash
 # use npm
-$ npm install angular-stripe
+$ npm install --save angular-stripe
 # or bower
-$ bower install angular-stripe
+$ bower install --save angular-stripe
 ```
 
 For Angular 1.2 support, you'll need to load [angular-q-constructor](https://github.com/bendrucker/angular-q-constructor) first. 
@@ -112,11 +112,11 @@ The following utility methods are also exposed:
 app.controller('PaymentController', function ($scope, $http, stripe) {
   $scope.charge = function () {
     return stripe.card.createToken($scope.payment.card)
-      .then(function (token) {
-        console.log('token created for card ending in ', token.card.last4);
+      .then(function (response) {
+        console.log('token created for card ending in ', response.card.last4);
         var payment = angular.copy($scope.payment);
         payment.card = void 0;
-        payment.token = token.id;
+        payment.token = response.id;
         return $http.post('https://yourserver.com/payments', payment);
       })
       .then(function (payment) {

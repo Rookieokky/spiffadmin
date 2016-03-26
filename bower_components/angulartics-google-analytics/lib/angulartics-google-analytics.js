@@ -20,6 +20,20 @@ angular.module('angulartics.google.analytics', ['angulartics'])
     userId: null
   };
 
+  function setDimensionsAndMetrics(properties) {
+    if (window.ga) {
+      // add custom dimensions and metrics
+      for(var idx = 1; idx<=200;idx++) {
+        if (properties['dimension' +idx.toString()]) {
+          ga('set', 'dimension' +idx.toString(), properties['dimension' +idx.toString()]);
+        }
+        if (properties['metric' +idx.toString()]) {
+          ga('set', 'metric' +idx.toString(), properties['metric' +idx.toString()]);
+        }
+      }
+    }
+  }
+
   $analyticsProvider.registerPageTrack(function (path) {
     if (window._gaq) {
       _gaq.push(['_trackPageview', path]);
@@ -77,15 +91,15 @@ angular.module('angulartics.google.analytics', ['angulartics'])
       };
 
       // add custom dimensions and metrics
-      for(var idx = 1; idx<=20;idx++) {
-      if (properties['dimension' +idx.toString()]) {
-        eventOptions['dimension' +idx.toString()] = properties['dimension' +idx.toString()];
+      setDimensionsAndMetrics(properties);
+
+      if ($analyticsProvider.settings.ga.transport) {
+        ga('send', 'event', eventOptions, { transport: $analyticsProvider.settings.ga.transport});
       }
-      if (properties['metric' +idx.toString()]) {
-        eventOptions['metric' +idx.toString()] = properties['metric' +idx.toString()];
-        }
+      else {
+        ga('send', 'event', eventOptions);
       }
-      ga('send', 'event', eventOptions);
+
       angular.forEach($analyticsProvider.settings.ga.additionalAccountNames, function (accountName){
         ga(accountName +'.send', 'event', eventOptions);
       });
@@ -97,8 +111,64 @@ angular.module('angulartics.google.analytics', ['angulartics'])
 
   });
 
+  /**
+   * Exception Track Event in GA
+   * @name exceptionTrack
+   *
+   * @param {object} properties Comprised of the mandatory fields 'appId' (string), 'appName' (string) and 'appVersion' (string) and 
+   * optional  fields 'fatal' (boolean) and 'description' (string)
+   *
+   * @https://developers.google.com/analytics/devguides/collection/analyticsjs/exceptions
+   *
+   * @link https://developers.google.com/analytics/devguides/collection/analyticsjs/events
+   */
+  $analyticsProvider.registerExceptionTrack(function (properties) {
+    if (!properties || !properties.appId || !properties.appName || !properties.appVersion) {
+        console.error('Must be setted appId, appName and appVersion.');
+        return;
+    }
+
+    if(properties.fatal === undefined) {
+        console.log('No "fatal" provided, sending with fatal=true');
+        properties.exFatal = true;
+    }
+
+    properties.exDescription = properties.description;
+
+    ga('send', 'exception', properties);
+  });
+
   $analyticsProvider.registerSetUsername(function (userId) {
     $analyticsProvider.settings.ga.userId = userId;
+  });
+
+  $analyticsProvider.registerSetUserProperties(function (properties) {
+    // add custom dimensions and metrics
+    setDimensionsAndMetrics(properties);
+  });
+
+  /**
+   * User Timings Event in GA
+   * @name userTimings
+   *
+   * @param {object} properties Comprised of the mandatory fields:
+   *     'timingCategory' (string),
+   *     'timingVar' (string),
+   *     'timingValue' (number)
+   * Properties can also have the optional fields:
+   *     'timingLabel' (string)
+   *
+   * @link https://developers.google.com/analytics/devguides/collection/analyticsjs/user-timings
+   */
+  $analyticsProvider.registerUserTimings(function (properties) {
+    if (!properties || !properties.timingCategory || !properties.timingVar || !properties.timingValue) {
+      console.error('Properties timingCategory, timingVar, and timingValue are required to be set.');
+      return;
+    }
+
+    if(window.ga) {
+      ga('send', 'timing', properties);
+    }
   });
 
 }]);
