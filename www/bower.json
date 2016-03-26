@@ -1,0 +1,28 @@
+{
+  "name": "SpiffAdmin",
+  "private": "true",
+  "devDependencies": {
+    "ionic": "driftyco/ionic-bower#1.2.0",
+    "angular": "1.5.3",
+    "angular-carousel": "1.0.1",
+    "angular-carousel-3d": "0.1.1",
+    "angular-filepicker": "",
+    "angular-markdown-directive": "0.3.1",
+    "angular-motion": "0.4.3",
+    "angular-payments": "0.1.1",
+    "angular-sanitize": "1.5.3",
+    "angular-slick-carousel": "3.1.4",
+    "angular-stripe": "~4.2.8",
+    "angular-stripe-checkout": "2.2.1",
+    "angular-swipe": "0.1.0",
+    "angular-touch": "1.5.3",
+    "angularjs-socialshare": "0.1.20",
+    "angulartics": "0.20.3",
+    "angulartics-google-analytics": "~1.0.0",
+    "jquery": "2.2.2",
+    "SHA-1": "0.1.1",
+    "showdown": "0.3.4",
+    "slick-carousel": "1.5.9",
+    "waypointds": "3.1.1"
+  }
+}
