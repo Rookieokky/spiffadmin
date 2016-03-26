@@ -1,55 +1,71 @@
-<ion-view view-title="Login" name="login-view" hide-nav-bar="true" class="stable-bg">
-<ion-content>
-<!-- Logo -->
-<div class="padding text-center">
-  <h1>
-    <i class="energized ion-bag"></i>
-  </h1>
-  <h2 class="energized">SpiffUp</h2>
-  <p class="energized">Clothing Shit</p>
-</div>
+<div id="page-top" class="page-top">&nbsp;</div>
 
-<!-- Login form -->
-<form novalidate name="loginForm" ng-submit="loginForm.$valid && signIn(user)">
-  <div class="list list-inset">
-    <label class="item item-input" ng-class="{ 'has-error' : loginForm.txtemail.$invalid && loginForm.$submitted } ">
-      <input type="email" placeholder="Email" ng-model="user.email" placeholder="Email"     ng-minlength="5"
-      ng-maxlength="30"
-      required>
-    </label>
-    <div class="form-errors" ng-messages="loginForm.txtemail.$error" ng-if="loginForm.$submitted">
-      <div class="form-error" ng-message="required">This field is required.</div>
-      <div class="form-error" ng-message="email">This field is must be an email.</div>
-      <div class="form-error" ng-message="minlength">This field is must be at least 5 characters.</div>
-      <div class="form-error" ng-message="maxlength">This field is must be less than 30 characters.</div>
-    </div>
-    <label class="item item-input" ng-class="{ 'has-error-lr' : loginForm.txtPassword.$invalid && loginForm.$submitted }">
-      <input type="password" placeholder="Password" ng-model="user.password" placeholder="Password"
-      ng-minlength="5"
-      ng-maxlength="30"
-      required>
-    </label>
-    <div class="form-errors" ng-messages="loginForm.txtPassword.$error" ng-if="loginForm.$submitted">
-      <div class="form-error" ng-message="required">This field is required.</div>
-      <div class="form-error" ng-message="minlength">This field is must be at least 5 characters.</div>
-      <div class="form-error" ng-message="maxlength">This field is must be less than 30 characters.</div>
-    </div>
-  </div>
-  <div class="padding-top">
-    <input type="submit" class="button button-block button-positive" value="Sign-In">
-    <p class="text-center padding-top">
-      <a href="#/forgot" class="button button-clear button-positive">Forgot password</a><a href="#/register" class="button button-clear button-positive">Register</a>
-    </div>
-  </form>
+<section id="account" class="section-product" ng-init="account.initView()">
+    <div class="container">
+        
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2">
+                <h1>Admin Login</h1>
+            </div>
+        </div>
+        
+        <hr class="star-light">
+        
+        <div class="row">
+            <div class="col-sm-4 col-sm-offset-2 text-left">
+                <h2>Steps 1-5: 
+                    <br>
+                Setup Admin Access</h2>
+                <p>
+                    At this point, we assume that you  have setup your Firebase
+                    Account.
+                </p>
+                <p>
+                    If this is the first time you are visiting the
+                    <strong>Admin section</strong>, then please follow steps 1 to 5. 
+                    If you have completed these steps before, skip to step 6</p>
+                <p >
+                    <a href="img/examples/example-setup-admin-firebase-0.png" target="_blank">
+                        Step 1-3: Setup Email and Authentication
+                    </a>
+                </p>
+                <p>
+                    <a href="img/examples/example-setup-admin-firebase-1.png" target="_blank">
+                        Step 4: Register yourself as a new user on Firebase
+                    </a>
+                </p>
+                <p>
+                    <a href="img/examples/example-setup-admin-firebase-2.png" target="_blank">
+                        Step 5: Specify the user with the Administrator rights
+                    </a>
+                </p>
+            </div>
+            
+            <div class="col-sm-4 col-sm-offset-1 text-left">
+                <h2>Step 6: Sign in</h2>
+                <p>
+                    <input 
+                        class="submit-box-generic input-wide"
+                        placeholder="E-mail"
+                        type="email" ng-model="account.inputData.signIn.email">
+                    <input 
+                        class="submit-box-generic input-wide"
+                        placeholder="Password"
+                        type="password" ng-model="account.inputData.signIn.password">
+                </p>
+                <p>
+                    <button 
+                        class="btn-positive"
+                        ng-click="account.authWithEmail()">Sign in</button>
+                </p>
+                <p>
+                    {{account.inputData.signIn.message}}
+                </p>
+            </div>
+        </div>
 
-  <!-- Social login -->
-  <div class="padding row">
-    <div class="col facebook-login icon-left social-button">
-      <i class="icon ion-social-facebook"></i>
-      <span>Facebook</span>
+        
     </div>
-  </div>
+</section>
 
-  <!-- Other links -->
-  </ion-content>
-</ion-view>
+

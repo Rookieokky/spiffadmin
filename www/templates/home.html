@@ -1,24 +1,62 @@
-<!--
-  This template loads for the 'home' state (app.js)
-  'slides' and 'products' is $scope variable in HomeCtrl
--->
-<ion-view view-title="Home">
-  <ion-content class="">
-    <!-- Slider using slide box -->
-    <h4 class="text-center">Discover our topsellers</h4>
+<div id="page-top" class="page-top">&nbsp;</div> <!-- used for anchorscroll -->
 
-    <!-- List of items: 2 columns-->
-    <div class="row flex-wrap">
-      <div class="col-50" ng-repeat="item in products">
-        <a ui-sref="detail">
-          <img class="full-image" src="{{ item.thumb }}" alt=""/>
-          <span class="product-title">{{ item.name }}</span>
-          <span class="price dark" ng-if="!item.sale_price">${{ item.price }}</span>
-          <span class="price dark" ng-if="item.sale_price">${{ item.sale_price}}</span>
-          <span class="old-price" ng-if="item.sale_price">${{ item.price }}</span>
-        </a>
-      </div>
+<section id="home" class="section-product" ng-init="home.initView()">
+    <div class="container">
+        
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2 text-center">
+                
+                <h1>
+                    Market App Admin
+                </h1>
+                <p>
+                    Signed in with: 
+                    <span class="text-variable">
+                        {{home.AuthData.password.email}}
+                    </span>
+                </p>
+      
+            </div>
+        </div>
+        
+        <hr class="star-light">
+        
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2 text-center">
+                
+                <button
+                    ng-click="home.goTo('admin.settings-fees')"
+                    class="btn-choice">
+                    Edit fees
+                </button>
+                
+                <button
+                    ng-click="home.goTo('admin.categories')"
+                    class="btn-choice">
+                    Edit categories
+                </button>
+                
+                <button
+                    ng-click="home.goTo('admin.submit')"
+                    class="btn-choice">
+                    + Add item
+                </button>
+                
+                <button
+                    ng-click="home.goTo('admin.items')"
+                    class="btn-choice">
+                    Manage items
+                </button>
+                
+                <button 
+                    ng-click="home.goTo('admin.sales')"
+                    class="btn-choice">
+                    Orders & sales
+                </button>
+      
+            </div>
+            
+        </div>
+
     </div>
-
-  </ion-content>
-</ion-view>
+</section>

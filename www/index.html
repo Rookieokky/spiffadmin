@@ -1,145 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" ng-app="spifftestpo">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
-    <title></title>
-
-
-    <!-- compiled css output -->
-    <link href="css/ionic.app.css" rel="stylesheet">
-
-    <!-- ionic/angularjs js -->
-    <script src="lib/ionic/js/ionic.bundle.js"></script>
     
-    <script src="lib/ngCordova/dist/ng-cordova.min.js"></script>
-    <script src="lib/ngstorage/ngStorage.min.js"></script>
-    <script src="lib/firebase/firebase.js"></script>
-    <script src="lib/angularfire/dist/angularfire.min.js"></script>
-    <script src="lib/angular-messages/angular-messages.min.js"></script>
+    <!-- other -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- descriptive -->
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <title>Template Admin | Ionic Shop ++ by Noodlio</title>
+    <meta name="description" content="Admin for the template Ionic Shop ++ powered by Firebase">
+    <meta name="author" content="Noodlio">
+    
+    <!-- custom noodlio css -->
+    <link rel="stylesheet" href="/css/noodlio.css">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,600|Montserrat+Alternates' rel='stylesheet' type='text/css'>
 
-    <!-- cordova script (this will be a 404 during development) -->
-    <script src="cordova.js"></script>
+    <!-- bootstrap css & fonts -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    
+    <!-- angular & firebase cdn -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.15/angular-ui-router.min.js"></script>
+    <script src="https://cdn.firebase.com/js/client/2.4.0/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/1.1.3/angularfire.min.js"></script>
 
-    <!-- your app's js -->
-    <script src="js/app.js"></script>
-    <script src="js/controllers.js"></script>
-    <script src="js/services.js"></script>
+    <!-- image upload and base64 converter -->
+    <script src="https://cdn.rawgit.com/adonespitogo/angular-base64-upload/master/src/angular-base64-upload.js" type="text/javascript" ></script>
+    
+    <!-- markdown -->
+    <script src="/bower_components/angular-sanitize/angular-sanitize.min.js"></script>
+    <script src="/bower_components/showdown/compressed/Showdown.min.js"></script>
+    <script src="/bower_components/angular-markdown-directive/markdown.js"></script>
+    
+    <!-- angular scripts -->
+    <script src="/js/app.js"></script>
+    <script src="/js/controllers-account.js"></script>
+    <script src="/js/controllers-home.js"></script>
+    <script src="/js/controllers-categories.js"></script>
+    <script src="/js/controllers-settings-fees.js"></script>
+    <script src="/js/controllers-items.js"></script>
+    <script src="/js/controllers-navbar.js"></script>
+    <script src="/js/controllers-sales.js"></script>
+    <script src="/js/controllers-submit.js"></script>
 
+    <script src="/js/services-auth.js"></script>
+    <script src="/js/services-categories.js"></script>
+    <script src="/js/services-settings.js"></script>
+    <script src="/js/services-products.js"></script>
+    <script src="/js/services-orders.js"></script>
+    <script src="/js/services-utils.js"></script>
 
+    <!-- 
+    <meta name="fragment" content="!">
+    <base href="/">
+    -->
 
   </head>
-  <body ng-app="starter">
-  <ion-side-menus>
 
-    <!-- Center content -->
-    <ion-side-menu-content>
-      <ion-nav-bar class="bar-positive" align-title="center">
-        <!-- Back button -->
-        <ion-nav-back-button>
-          Back
-        </ion-nav-back-button>
-
-        <!-- Burger button -->
-        <ion-nav-buttons side="left">
-          <button class="button button-icon button-clear ion-navicon" menu-toggle="left">
-          </button>
-        </ion-nav-buttons>
-
-        <!-- Cart button -->
-        <ion-nav-buttons side="right">
-          <button class="button button-icon button-clear ion-bag" ui-sref="cart">
-            <span class="header-badge">5</span>
-          </button>
-        </ion-nav-buttons>
-      </ion-nav-bar>
-
-      <!-- Main view content -->
-      <ion-nav-view animation="slide-left-right"></ion-nav-view>
-    </ion-side-menu-content>
-
-    <!-- Left menu -->
-    <ion-side-menu side="left" class="dark-bg">
-      <ion-content>
-
-        <!-- Search input on head of side menu -->
-        <ion-header-bar class="bar bar-light item-input-inset dark-bg">
-          <label class="item-input-wrapper">
-            <i class="icon ion-ios-search placeholder-icon"></i>
-            <input type="search" placeholder="Search">
-          </label>
-        </ion-header-bar>
-
-        <!-- Menu -->
-        <div class="list" menu-close="">
-          <div class="item item-icon-lef" ui-sref="home">
-            <i class="icon ion-home"></i>
-            Home
-          </div>
-
-          <div class="item item-icon-lef item-divider" ui-sref="category">
-            <i class="icon ion-man"></i>
-            Men
-          </div>
-          <div class="item item-icon-lef" ui-sref="category">
-            <i class="icon ion-tshirt-outline"></i>
-              Oouterwear
-          </div>
-          <div class="item item-icon-lef" ui-sref="category">
-            <i class="icon ion-tshirt-outline"></i>
-              Jackets
-          </div>
-          <div class="item item-icon-lef" ui-sref="category">
-            <i class="icon ion-tshirt-outline"></i>
-              Leather
-          </div>
-          <div class="item item-icon-lef" ui-sref="category">
-            <i class="icon ion-tshirt-outline"></i>
-              Blazers
-          </div>
-          <div class="item item-icon-lef" ui-sref="category">
-            <i class="icon ion-tshirt-outline"></i>
-              Suits
-          </div>
-          <div class="item item-icon-lef item-divider" ui-sref="category">
-            <i class="icon ion-woman"></i>
-            Women
-          </div>
-          <div class="item item-icon-lef" ui-sref="category">
-            <i class="icon ion-tshirt-outline"></i>
-            Jackets
-          </div>
-          <div class="item item-icon-lef" ui-sref="category">
-            <i class="icon ion-tshirt-outline"></i>
-            Blazers
-          </div>
-          <div class="item item-icon-lef" ui-sref="category">
-            <i class="icon ion-tshirt-outline"></i>
-            Leather
-          </div>
-          <div class="item item-icon-lef" ui-sref="category">
-            <i class="icon ion-tshirt-outline"></i>
-            Dreses
-          </div>
-          <div class="item item-icon-lef" ui-sref="category">
-            <i class="icon ion-tshirt-outline"></i>
-            Outerwear
-          </div>
-          <div class="item item-icon-lef item-divider">
-            <i class="icon ion-ios-gear"></i>
-            Application
-          </div>
-          <div class="item item-icon-lef" ui-sref="login">
-            <i class="icon ion-android-exit"></i>
-            Logout
-          </div>
-        </div>
-
-      </ion-content>
-
-    </ion-side-menu>
-
-  </ion-side-menus>
+  <body>
+    
+    <!-- angular ui-router -->
+    <div ui-view></div>
 
   </body>
 </html>
+
