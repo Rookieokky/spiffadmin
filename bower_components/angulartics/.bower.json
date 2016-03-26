@@ -24,6 +24,6 @@
     "commit": "85413c113f99aee17f71d20ff05f9172b66f051c"
   },
   "_source": "git://github.com/angulartics/angulartics.git",
-  "_target": "~1.0.0",
+  "_target": "~1.0.3",
   "_originalSource": "angulartics"
 }
